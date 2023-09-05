@@ -38,10 +38,16 @@ export default class HighlightrPlugin extends Plugin {
       id: "highlighter-plugin-menu",
       name: "Open Highlightr",
       icon: "highlightr-pen",
-      editorCallback: (editor: EnhancedEditor) => {
-        !document.querySelector(".menu.highlighterContainer")
-          ? highlighterMenu(this.app, this.settings, editor)
-          : true;
+      editorCallback: this.openHighlightrCallback,
+    });
+
+    this.addCommand({
+      id: "toggle-highlight",
+      name: "Toggle highlight",
+      icon: "highlightr-pen",
+      editorCallback: async (editor: EnhancedEditor) => {
+        this.toggleHighlight(editor);
+        editor.focus();
       },
     });
 
@@ -71,6 +77,32 @@ export default class HighlightrPlugin extends Plugin {
       .replace(/\<mark class.*?[^\>]\>/g, "")
       .replace(/\<\/mark>/g, "");
     editor.replaceSelection(newStr);
+    editor.focus();
+  };
+
+  toggleHighlight = (editor: EnhancedEditor) => {
+    const selection = editor.getSelection();
+    console.log('toggle highlight');
+
+    if((/\<mark .*?[^\>]\>/g).test(selection) && (/\<\/mark>/g).test(selection)){
+      this.unhighlightCallback(editor);
+      console.log('unhighlightr');
+    }
+    else{
+      console.log('open highlight');
+
+      this.openHighlightrCallback(editor);
+    }
+  };
+
+  openHighlightrCallback = (editor: EnhancedEditor) => {
+    !document.querySelector(".menu.highlighterContainer")
+      ? highlighterMenu(this.app, this.settings, editor)
+      : true;
+  };
+
+  unhighlightCallback = async (editor: Editor) => {
+    this.eraseHighlight(editor);
     editor.focus();
   };
 
@@ -168,10 +200,7 @@ export default class HighlightrPlugin extends Plugin {
         id: "unhighlight",
         name: "Remove highlight",
         icon: "highlightr-eraser",
-        editorCallback: async (editor: Editor) => {
-          this.eraseHighlight(editor);
-          editor.focus();
-        },
+        editorCallback: this.unhighlightCallback,
       });
     });
   }
